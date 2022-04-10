@@ -1,6 +1,7 @@
 import "./style.css";
 
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://127.0.0.1:8080";
+// @ts-expect-error: `__API_URL__` is filled in by vite-plugin-replace
+const API_BASE_URL = __API_URL__;
 const toText = (r: Response) => r.text();
 const api = {
   submit: (n: number) =>
@@ -13,12 +14,8 @@ const api = {
       .then(parseInt),
 };
 
-document.querySelector("#app")!.innerHTML = `
-<div>
-  <span id="count">0</span>
-  <button id="click">Click me</button>
-</div>
-`;
+const app = document.querySelector("#app")!;
+app.innerHTML = `<div><span id="count">0</span><button id="click">Click me</button></div>`;
 
 const el = {
   count: document.getElementById("count") as HTMLSpanElement,
