@@ -41,8 +41,7 @@ async function synchronize() {
   let value = Math.min(pendingCount, 500);
   pendingCount -= value;
 
-  if (value <= 0) return;
-  setTotalCount(await api.submit(value));
+  setTotalCount(value > 0 ? await api.submit(value) : await api.sync());
 }
 
 el.button.onclick = increment;
