@@ -1,0 +1,16 @@
+[package]
+name = "clicky-ntex"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "clicky-ntex"
+path = "src/main.rs"
+
+[dependencies]
+ntex = { version = "0.5.14", features = ["tokio"] }
+ntex-cors = { git = "https://github.com/ntex-rs/ntex-extras" }
+futures-util = "0.3.21"
+ntex-tokio = "0.1.3"
+env_logger = "0.9.0"
+log = "0.4.16"

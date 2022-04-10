@@ -1,12 +1,13 @@
 mod error;
 
 use actix_cors::Cors;
-use actix_http::StatusCode;
+use actix_http::{KeepAlive, StatusCode};
 use actix_web::{get, middleware, post, web, App, HttpResponse, HttpServer};
 use error::Failure;
 use futures_util::StreamExt;
 use std::sync::atomic::{AtomicU64, Ordering};
 
+// NOTE: a static global atomic performs about the same as web::Data<Count>
 /// Atomic counter
 #[derive(Default)]
 struct Count(AtomicU64);
@@ -46,18 +47,18 @@ async fn submit(body: web::Payload, count: web::Data<Count>) -> actix_web::Resul
     .await
     .internal()?
     .failed(StatusCode::BAD_REQUEST)?;
-  log::info!("{raw:?}");
+
   let value = std::str::from_utf8(&raw[0..len])
     .failed(StatusCode::BAD_REQUEST)?
     .parse::<u16>()
     .failed(StatusCode::BAD_REQUEST)? as u64;
+
   if value > 500 {
     return Ok(HttpResponse::BadRequest().finish());
   }
 
   let old_count = count.get_ref().add(value);
   let new_count = old_count + value;
-  log::info!("Updated count: {new_count}");
 
   Ok(HttpResponse::Ok().body(format!("{new_count}")))
 }
@@ -68,7 +69,7 @@ async fn sync(count: web::Data<Count>) -> actix_web::Result<HttpResponse> {
   Ok(HttpResponse::Ok().body(format!("{count}")))
 }
 
-fn init_logger() {
+pub fn init_logger() {
   if std::env::var("RUST_LOG").is_err() {
     std::env::set_var("RUST_LOG", "info,actix_web=debug"); // actix_web=debug enables error logging
   }
@@ -77,7 +78,7 @@ fn init_logger() {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-  init_logger();
+  // init_logger();
   let addr = std::env::var("SERVER_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".into());
   let count = web::Data::new(Count::default());
   // TODO: rate limiting (20 tokens every second)
@@ -95,6 +96,10 @@ async fn main() -> std::io::Result<()> {
       .service(sync)
       .service(submit)
   })
+  .backlog(1024)
+  .keep_alive(KeepAlive::Os)
+  .client_request_timeout(std::time::Duration::from_millis(200))
+  .client_disconnect_timeout(std::time::Duration::from_millis(400))
   .bind(&addr)?
   .run()
   .await
