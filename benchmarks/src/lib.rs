@@ -1,8 +1,7 @@
 #![feature(core_intrinsics)]
 use std::time::Duration;
 
-pub use std::intrinsics;
-pub use tokio::sync::Semaphore;
+pub use {std::intrinsics, tokio::sync::Semaphore};
 
 #[macro_export]
 macro_rules! run {

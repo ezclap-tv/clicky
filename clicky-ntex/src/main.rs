@@ -1,18 +1,20 @@
 mod error;
 
-use error::{Error, Failure};
-use futures_util::StreamExt;
-use ntex::{
-  http::{KeepAlive, StatusCode},
-  util::Bytes,
-  web::{
-    self,
-    types::{Payload, State},
-    App, HttpResponse, HttpServer,
+use {
+  error::{Error, Failure},
+  futures_util::StreamExt,
+  ntex::{
+    http::{KeepAlive, StatusCode},
+    util::Bytes,
+    web::{
+      self,
+      types::{Payload, State},
+      App, HttpResponse, HttpServer,
+    },
   },
+  ntex_cors::Cors,
+  std::sync::atomic::{AtomicU64, Ordering},
 };
-use ntex_cors::Cors;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 /// Atomic counter
 #[derive(Default)]

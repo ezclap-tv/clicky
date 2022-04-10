@@ -1,11 +1,17 @@
-mod error;
+use {
+  actix_cors::Cors,
+  actix_http::{KeepAlive, StatusCode},
+  actix_web::{
+    get, middleware, post,
+    web::{self, Bytes},
+    App, HttpResponse, HttpServer,
+  },
+  error::Failure,
+  futures_util::StreamExt,
+  std::sync::atomic::{AtomicU64, Ordering},
+};
 
-use actix_cors::Cors;
-use actix_http::{KeepAlive, StatusCode};
-use actix_web::{get, middleware, post, web, App, HttpResponse, HttpServer};
-use error::Failure;
-use futures_util::StreamExt;
-use std::sync::atomic::{AtomicU64, Ordering};
+mod error;
 
 // NOTE: a static global atomic performs about the same as web::Data<Count>
 /// Atomic counter
@@ -23,10 +29,10 @@ impl Count {
   }
 }
 
-async fn read_payload_static<const SIZE: usize>(
+async fn read_payload_static(
   mut payload: web::Payload,
-) -> actix_web::Result<Option<([u8; SIZE], usize)>> {
-  let mut buf = [0u8; SIZE];
+) -> actix_web::Result<Option<([u8; 3], usize)>> {
+  let mut buf = [0u8; 3];
   let mut read_bytes = 0;
   while let Some(data) = payload.next().await {
     let data = data?;
@@ -39,11 +45,18 @@ async fn read_payload_static<const SIZE: usize>(
   Ok(Some((buf, read_bytes)))
 }
 
+fn write_payload(count: u64) -> [u8; 20] {
+  use std::io::Write;
+  let mut buf = [0u8; 20];
+  write!(&mut buf[..], "{count}").expect("Buffer is the wrong size");
+  buf
+}
+
 #[post("/")]
 async fn submit(body: web::Payload, count: web::Data<Count>) -> actix_web::Result<HttpResponse> {
   // maximum value = 500
   // which is 3 digits
-  let (raw, len) = read_payload_static::<3>(body)
+  let (raw, len) = read_payload_static(body)
     .await
     .internal()?
     .failed(StatusCode::BAD_REQUEST)?;
@@ -60,7 +73,8 @@ async fn submit(body: web::Payload, count: web::Data<Count>) -> actix_web::Resul
   let old_count = count.get_ref().add(value);
   let new_count = old_count + value;
 
-  Ok(HttpResponse::Ok().body(format!("{new_count}")))
+  let response = write_payload(new_count);
+  Ok(HttpResponse::Ok().body(Bytes::copy_from_slice(&response[..])))
 }
 
 #[get("/")]
@@ -78,10 +92,9 @@ pub fn init_logger() {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-  // init_logger();
+  init_logger();
   let addr = std::env::var("SERVER_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".into());
   let count = web::Data::new(Count::default());
-  // TODO: rate limiting (20 tokens every second)
   HttpServer::new(move || {
     App::new()
       .app_data(web::Data::clone(&count))

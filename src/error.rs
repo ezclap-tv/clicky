@@ -1,9 +1,11 @@
-use actix_http::StatusCode;
-use actix_web::{error::ResponseError, HttpResponse};
+use {
+  actix_http::StatusCode,
+  actix_web::{error::ResponseError, HttpResponse},
+};
 
 #[derive(Debug, Clone)]
 pub struct Error {
-  code: StatusCode,
+  pub code: StatusCode,
 }
 
 impl std::fmt::Display for Error {
