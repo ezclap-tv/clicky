@@ -8,12 +8,14 @@ use {
   },
   error::Failure,
   futures_util::StreamExt,
-  std::sync::atomic::{AtomicU64, Ordering},
+  std::{
+    io::Cursor,
+    sync::atomic::{AtomicU64, Ordering},
+  },
 };
 
 mod error;
 
-// NOTE: a static global atomic performs about the same as web::Data<Count>
 /// Atomic counter
 #[derive(Default)]
 struct Count(AtomicU64);
@@ -45,11 +47,13 @@ async fn read_payload_static(
   Ok(Some((buf, read_bytes)))
 }
 
-fn write_payload(count: u64) -> [u8; 20] {
+fn write_payload(count: u64) -> ([u8; 20], usize) {
   use std::io::Write;
-  let mut buf = [0u8; 20];
-  write!(&mut buf[..], "{count}").expect("Buffer is the wrong size");
-  buf
+  let mut cursor = Cursor::new([0u8; 20]);
+  write!(&mut cursor, "{count}").expect("Buffer is the wrong size");
+  let pos = cursor.position() as usize;
+  let buf = cursor.into_inner();
+  (buf, pos)
 }
 
 #[post("/")]
@@ -61,7 +65,7 @@ async fn submit(body: web::Payload, count: web::Data<Count>) -> actix_web::Resul
     .internal()?
     .failed(StatusCode::BAD_REQUEST)?;
 
-  let value = std::str::from_utf8(&raw[0..len])
+  let value = std::str::from_utf8(&raw[..len])
     .failed(StatusCode::BAD_REQUEST)?
     .parse::<u16>()
     .failed(StatusCode::BAD_REQUEST)? as u64;
@@ -73,8 +77,8 @@ async fn submit(body: web::Payload, count: web::Data<Count>) -> actix_web::Resul
   let old_count = count.get_ref().add(value);
   let new_count = old_count + value;
 
-  let response = write_payload(new_count);
-  Ok(HttpResponse::Ok().body(Bytes::copy_from_slice(&response[..])))
+  let (raw, len) = write_payload(new_count);
+  Ok(HttpResponse::Ok().body(Bytes::copy_from_slice(&raw[..len])))
 }
 
 #[get("/")]
