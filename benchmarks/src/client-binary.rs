@@ -34,7 +34,7 @@ async fn main() {
     request.try_clone().expect("Request must be clonable"),
   ));
 
-  const N_CPUS: usize = 12;
+  const N_CPUS: usize = 1;
   benchmarks::run!(
     C = 1024 * N_CPUS,
     report_freq = Duration::from_millis(1000),
