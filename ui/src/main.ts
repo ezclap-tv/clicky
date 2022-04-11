@@ -25,6 +25,14 @@ const el = {
 let totalCount = 0;
 let pendingCount = 0;
 
+function onLoad() {
+  totalCount = parseInt(localStorage.c);
+}
+function onUnload() {
+  localStorage.c = totalCount.toString();
+  synchronize();
+}
+
 function setTotalCount(value: number) {
   totalCount = value;
   el.count.innerText = totalCount.toString();
@@ -43,8 +51,13 @@ async function synchronize() {
 
 el.button.onclick = increment;
 
-// synchronize every 3 seconds + some random offset
+// synchronize every 3 seconds + some random offset and on page close
+// the total count is also held in local storage, so that the value
+// does not start at 0 every time the page reloads.
 setInterval(() => setTimeout(synchronize, Math.floor(Math.random() * 1000)), 3 * 1000);
-
-api.sync().then((v) => setTotalCount(v));
+window.addEventListener("beforeunload", onUnload);
+api.sync().then((v) => {
+  setTotalCount(v);
+  onLoad();
+});
 
