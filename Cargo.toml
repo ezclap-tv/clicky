@@ -1,8 +1,11 @@
 [package]
 name = "clicky"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
+[[bin]]
+name = "clicky"
+path = "src/main.rs"
 
 [dependencies]
 actix-cors = "0.6.1"
@@ -22,6 +25,7 @@ members = [".", "benchmarks"]
 lto = true
 opt-level = 3
 codegen-units = 1
+strip = true  # Automatically strip symbols from the binary
 
 [features]
 default = []
