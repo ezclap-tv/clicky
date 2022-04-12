@@ -40,6 +40,14 @@ Using Nginx reduces the performance by 70%, while logging to a file shaves 25% o
 | Domain, Nginx proxy, Logging=info to a buffered file                      | `62,358`  | `9,401.33`         |
 
 
+### Backend Benchmarks
+| Configuration                                         | RPS       | Standard Deviation |
+| ----------------------------------------------------- | --------- | ------------------ |
+| Localhost, Logging=uninitialized, No backend          | `232,045` | `2,939.84`         |
+| Localhost, Logging=uninitialized, File (mmap) backend | `232,196` | `4,867.31`         |
+
+
+
 ## Preprocessing Code
 ```py
 #! python -m pip install requests pandas
@@ -62,6 +70,8 @@ urls = {
     "domain,nginx,logging=error,stdout": "https://haste.zneix.eu/raw/pynivyqydu.apache",
     "domain,nginx,logging=info,unix-pipe": "https://haste.zneix.eu/raw/ifawomujyg.apache",
     "domain,nginx,logging=info,fs-buffered": "https://haste.zneix.eu/raw/utedofabev.apache",
+    "localhost,logging=uninitialized,no-backend": "https://haste.zneix.eu/raw/sabifijope.apache",
+    "localhost,logging=uninitialized,file-backend": "https://haste.zneix.eu/raw/faqysavywu.apache"
 }
 
 for url in urls:
