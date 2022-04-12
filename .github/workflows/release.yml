@@ -24,11 +24,13 @@ jobs:
           toolchain: nightly-2022-04-11
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
+          archive: $bin-no-backend-$tag-$target
           bin: clicky
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
+          archive: $bin-file-backend-$tag-$target
           bin: clicky
           features: backend-file
         env:
