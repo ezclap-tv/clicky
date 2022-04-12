@@ -13,7 +13,7 @@ env_logger = "0.9.0"
 futures-util = "0.3.21"
 humantime = "2.1.0"
 log = "0.4.16"
-memmap2 = { version = "0.5.3", optional = true }
+thiserror = "1.0.30"
 
 [workspace]
 members = [".", "benchmarks"]
@@ -25,4 +25,4 @@ codegen-units = 1
 
 [features]
 default = []
-backend-file = ["memmap2"]
+backend-file = []
