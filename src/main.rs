@@ -1,7 +1,6 @@
 use {
   actix_http::KeepAlive,
   actix_web::{web, App, HttpServer},
-  clicky::storage,
 };
 
 pub fn init_logger() {
@@ -22,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
 
   #[cfg(feature = "backend-file")]
   {
-    storage::file::FileStorage::from_env()?.install(web::Data::clone(&count))?;
+    clicky::storage::file::FileStorage::from_env()?.install(web::Data::clone(&count))?;
   }
   #[cfg(feature = "backend-redis")]
   {
