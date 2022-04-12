@@ -14,7 +14,7 @@ futures-util = "0.3.21"
 log = "0.4.16"
 
 # file backen deps
-memmap = { version = "0.7.0", optional = true }
+memmap2 = { version = "0.5.3", optional = true }
 
 [workspace]
 members = [".", "benchmarks"]
@@ -26,4 +26,4 @@ codegen-units = 1
 
 [features]
 default = []
-backend-file = ["memmap"]
+backend-file = ["memmap2"]

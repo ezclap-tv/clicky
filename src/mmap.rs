@@ -1,8 +1,4 @@
-use std::{
-  fs::File,
-  io::Read,
-  sync::atomic::{AtomicBool, Ordering},
-};
+use std::{fs::File, io::Read};
 
 use actix_web::web;
 
@@ -38,13 +34,15 @@ impl MmapBackend {
     Ok(Self::new(file, sync_frequency))
   }
 
-  pub fn install(
-    mut self,
-    counter: web::Data<crate::Count>,
-  ) -> Result<(), Box<dyn std::error::Error>> {
+  pub fn install(self, counter: web::Data<crate::Count>) -> Result<(), Box<dyn std::error::Error>> {
+    let Self {
+      mut file,
+      sync_frequency,
+    } = self;
+
     let mut buf = [0; 20];
-    let read = self.file.read(&mut buf)?;
-    self.file.set_len(20)?; // u64 is 20 digits max
+    let read = file.read(&mut buf)?;
+    file.set_len(20)?; // u64 is 20 digits max
 
     let previous_count = buf[..read].iter().map(|&b| b as char).collect::<String>();
     let previous_count = if previous_count.len() > 0 {
@@ -61,14 +59,8 @@ impl MmapBackend {
 
     counter.set(previous_count);
 
-    let has_started = std::sync::Arc::new(AtomicBool::new(false));
-    let cloned = std::sync::Arc::clone(&has_started);
-    let handle = std::thread::spawn(move || {
-      let mut mmap =
-        unsafe { memmap::MmapMut::map_mut(&self.file).expect("Failed to mmap the counter file") };
-
-      cloned.store(true, Ordering::SeqCst);
-
+    let mut mmap = unsafe { memmap2::MmapMut::map_mut(&file) }?;
+    std::thread::spawn(move || {
       let mut previous_count = u64::MAX;
       loop {
         use std::io::Write;
@@ -82,17 +74,9 @@ impl MmapBackend {
         }
 
         // Note: thread::sleep utilizes the OS scheduler so we don't need to yield/do anything else
-        std::thread::sleep(self.sync_frequency);
+        std::thread::sleep(sync_frequency);
       }
     });
-
-    // This should only pause for a brief moment -- the thread must either successfully enter the sync loop or terminate with a panic.
-    while !has_started.load(Ordering::SeqCst) && !handle.is_finished() {}
-
-    if handle.is_finished() {
-      log::error!("[CLICKY] Sync thread has terminated unexpectedly");
-      Err("Sync thread has terminated unexpectedly.")?;
-    }
 
     Ok(())
   }
