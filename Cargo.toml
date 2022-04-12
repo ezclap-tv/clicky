@@ -11,9 +11,8 @@ actix-web = { version = "4.0.1", features = ["rustls"] }
 anyhow = "1.0.56"
 env_logger = "0.9.0"
 futures-util = "0.3.21"
+humantime = "2.1.0"
 log = "0.4.16"
-
-# file backen deps
 memmap2 = { version = "0.5.3", optional = true }
 
 [workspace]

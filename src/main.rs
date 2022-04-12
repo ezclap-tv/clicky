@@ -1,6 +1,7 @@
 use {
   actix_http::KeepAlive,
   actix_web::{web, App, HttpServer},
+  clicky::storage,
 };
 
 pub fn init_logger() {
@@ -14,20 +15,14 @@ pub fn init_logger() {
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> anyhow::Result<()> {
   init_logger();
   let addr = std::env::var("SERVER_ADDRESS").unwrap_or_else(|_| "127.0.0.1:8080".into());
   let count = web::Data::new(clicky::Count::default());
 
   #[cfg(feature = "backend-file")]
   {
-    clicky::mmap::MmapBackend::from_env()
-      .and_then(|backend| backend.install(web::Data::clone(&count)))
-      .map_err(|e| {
-        log::error!("{}", e);
-        e
-      })
-      .expect("Couldn't initialize the file storage backend.");
+    storage::file::FileStorage::from_env()?.install(web::Data::clone(&count))?;
   }
   #[cfg(feature = "backend-redis")]
   {
@@ -52,5 +47,7 @@ async fn main() -> std::io::Result<()> {
   .keep_alive(KeepAlive::Os)
   .bind(&addr)?
   .run()
-  .await
+  .await?;
+
+  Ok(())
 }

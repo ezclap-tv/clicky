@@ -13,10 +13,8 @@ use {
   },
 };
 
-mod error;
-
-#[cfg(feature = "backend-file")]
-pub mod mmap;
+pub mod error;
+pub mod storage;
 
 /// Atomic counter
 #[derive(Default)]
@@ -32,6 +30,7 @@ impl Count {
     self.0.fetch_add(value, Ordering::SeqCst)
   }
 
+  /// Sets `self` to `value`, returning the previous value
   pub fn set(&self, value: u64) -> u64 {
     self.0.swap(value, Ordering::SeqCst)
   }
@@ -94,92 +93,4 @@ pub async fn submit(
 pub async fn sync(count: web::Data<Count>) -> actix_web::Result<HttpResponse> {
   let count = count.get_ref().get();
   Ok(HttpResponse::Ok().body(format!("{count}")))
-}
-
-pub mod utils {
-  pub fn parse_duration(s: &str) -> Result<std::time::Duration, String> {
-    if s.len() > 7 {
-      return Err(format!(
-        "Invalid duration string. Expected a number followed by 'ms', 's', or 'm', but received '{}'", s
-      ));
-    }
-    let mut num = 0;
-    let mut bytes = s.bytes().take(7).peekable();
-    while let Some(b'0'..=b'9') = bytes.peek() {
-      let c = bytes.next().unwrap();
-      num = (num as u32)
-        .saturating_mul(10)
-        .saturating_add((c - b'0') as u32);
-    }
-
-    let length = bytes.map(|b| b as char).collect::<String>();
-
-    if num > u16::MAX as u32 {
-      return Err(format!(
-        "Provided duration is too large. Expected a number <= {}, but got {}",
-        u16::MAX,
-        num
-      ));
-    }
-
-    let num = num as u64;
-    match &length[..] {
-      "ms" | "" => Ok(std::time::Duration::from_millis(num)),
-      "s" => Ok(std::time::Duration::from_secs(num)),
-      "m" => Ok(std::time::Duration::from_secs(num * 60)),
-      _ => Err(format!(
-        "Unknown duration unit. Expected 'ms', 's', or 'm', but received '{}'",
-        length
-      )),
-    }
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use {super::utils::*, std::time::Duration};
-
-  #[test]
-  fn test_duration_parsing() {
-    let tests = vec![
-      "", "1ms", "1s", "2m", "0m", "22222s", "21818m", "65535ms", "ms", "m", "s",
-    ];
-    let expected = vec![
-      Duration::from_millis(0),
-      Duration::from_millis(1),
-      Duration::from_secs(1),
-      Duration::from_secs(2 * 60),
-      Duration::from_secs(0 * 60),
-      Duration::from_secs(22222),
-      Duration::from_secs(21818 * 60),
-      Duration::from_millis(65535),
-      Duration::from_millis(0),
-      Duration::from_millis(0),
-      Duration::from_millis(0),
-    ];
-
-    for (i, (t, e)) in tests.iter().zip(expected).enumerate() {
-      assert_eq!(parse_duration(t), Ok(e), "Test {} failed", i);
-    }
-  }
-
-  #[test]
-  fn test_duration_parsing_errors() {
-    let tests = vec![
-      "fldaksjfs",
-      "11111111111111111111111111111111111",
-      "65536",
-      "6 5 5 3 5",
-      "644....,/,/??>.....,",
-      "ssssssssssssssssssssssssssssssssssssssss",
-      "mmmmmmmmmmm",
-      "mmmmmmmmmssssssssssss",
-      "65535mss",
-      "65535sm",
-    ];
-
-    for (i, t) in tests.iter().enumerate() {
-      assert!(dbg!(parse_duration(t)).is_err(), "Test {} failed", i);
-    }
-  }
 }

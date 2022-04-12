@@ -376,6 +376,7 @@ dependencies = [
  "anyhow",
  "env_logger",
  "futures-util",
+ "humantime",
  "log",
  "memmap2",
 ]
