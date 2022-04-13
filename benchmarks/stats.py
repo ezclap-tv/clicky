@@ -10,7 +10,7 @@ runs = {
     "baseline": "https://haste.zneix.eu/raw/ucuqyrohab.apache",
     "no-logging": "https://haste.zneix.eu/raw/vobojasegy.apache",
     "global,no-logging": "https://haste.zneix.eu/raw/zibexafuko.apache",
-    "global,no-logging,backlog-1024,keepalive-os": "https://haste.zneix.eu/raw/enaxusiguk.apache",
+    "global,no-logging,backlog-1024,keepalive-os": "https://haste.zneix.eu/raw/acufaqegym.apache",
     "global,no-logging,backlog-1024,keepalive-os,snmalloc": "https://haste.zneix.eu/raw/medibijyky.apache",
     "ntex,no-logging,backlog-1024,keepalive-os": "https://haste.zneix.eu/raw/reniwanawy.apache",
     "ntex,no-logging,backlog-1024,keepalive-os,no-allocations": "https://haste.zneix.eu/raw/hamosaceba.apache",
@@ -31,7 +31,8 @@ runs = {
             "https://haste.zneix.eu/raw/vojopizuru.apache",
         ]
     ),
-    "localhost,python:fastapi+uvloop+coredis+hiredis,logging=off,redis-backend": "https://haste.zneix.eu/raw/ovyzikamuh.apache"
+    "localhost,python:fastapi+uvloop+coredis+hiredis,logging=off,redis-backend": "https://haste.zneix.eu/raw/ovyzikamuh.apache",
+    "localhost,go:atreugo,logging=off,redis-backend": "https://haste.zneix.eu/raw/fabypygyje.apache",
 }
 
 for url in runs:
