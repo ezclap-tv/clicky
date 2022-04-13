@@ -15,7 +15,7 @@ $ ./target/release/clicky
 ```
 
 ## Saving the count
-A persistent counter backend(s) may be selected and enabled at compile time using cargo features. For example, in order to use the file backend, use the following command:
+A persistent counter backend may be selected and enabled at compile time using cargo features. For example, in order to use the file backend, use the following command:
 
 ```bash
 $ cargo build --release --features=backend-file
