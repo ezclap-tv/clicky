@@ -56,22 +56,7 @@ fn write_file_contents(file: &mut File, value: u64) -> Result<()> {
 impl FileStorage {
   pub fn from_env() -> Result<Self> {
     let path = std::env::var("CLICKY_COUNTER_FILE").unwrap_or_else(|_| "clicky.txt".into());
-    let sync_frequency = match std::env::var("CLICKY_SYNC_FREQUENCY").ok() {
-      Some(v) => humantime::parse_duration(&v)
-        .map(|v| {
-          if v < MIN_DURATION {
-            log::warn!("Minimum for CLICKY_SYNC_FREQUENCY is 1s");
-            MIN_DURATION
-          } else {
-            v
-          }
-        })
-        .unwrap_or_else(|e| {
-          log::warn!("Failed to parse CLICKY_SYNC_FREQUENCY, default to 1s: {e}");
-          MIN_DURATION
-        }),
-      None => Duration::from_secs(1),
-    };
+    let sync_frequency = super::parse_sync_frequency();
 
     let file = fs::OpenOptions::new()
       .read(true)

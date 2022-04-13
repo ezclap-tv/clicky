@@ -1,3 +1,4 @@
+#![feature(core_intrinsics)]
 use {
   actix_http::StatusCode,
   actix_web::{
@@ -28,11 +29,6 @@ impl Count {
   /// Adds `value` to `self`, returning the previous value
   pub fn add(&self, value: u64) -> u64 {
     self.0.fetch_add(value, Ordering::SeqCst)
-  }
-
-  /// Sets `self` to `value`, returning the previous value
-  pub fn set(&self, value: u64) -> u64 {
-    self.0.swap(value, Ordering::SeqCst)
   }
 }
 

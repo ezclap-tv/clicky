@@ -32,3 +32,16 @@ Periodically saves the counter to a text file.
 | :----------: | -------- | ------- |
 | `CLICKY_COUNTER_FILE` | Path to the file that should store the number of clicks. | `clicky.txt` |
 | `CLICKY_SYNC_FREQUENCY` | See [humantime::parse_duration](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) for supported formats | `1s` |
+
+
+### Redis backend
+Periodically saves the counter to a [Redis](https://redis.com/) instance, synchronizing if needed. This backend supports multiple Clicky servers counting in parallel.
+
+| Cargo Feature   |
+| --------------- |
+| `backend-redis`  |
+
+| Env Variable | Description | Default |
+| :----------: | -------- | ------- |
+| `CLICKY_REDIS_URL` | URL of the redis instance to use. | `redis://127.0.0.1:6379` |
+| `CLICKY_SYNC_FREQUENCY` | See [humantime::parse_duration](https://docs.rs/humantime/latest/humantime/fn.parse_duration.html) for supported formats | `1s` |
