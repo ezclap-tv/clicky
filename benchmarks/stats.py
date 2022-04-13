@@ -31,6 +31,7 @@ runs = {
             "https://haste.zneix.eu/raw/vojopizuru.apache",
         ]
     ),
+    "localhost,python:fastapi+uvloop+coredis+hiredis,logging=off,redis-backend": "https://haste.zneix.eu/raw/ovyzikamuh.apache"
 }
 
 for url in runs:

@@ -9,20 +9,22 @@
 | Client threads | `12` |
 | Bench time | 60s |
 
+Additionally, see the `main` and [`benchmarks-1`](https://github.com/ezclap-tv/clicky/tree/benchmarks-1) for the source code.
+
 ## Results
 NOTE: after more digging, I've discovered ntex spawns a thread both per physical and virtual  core, while actix spawns a thread only per physical core. This might explain the performance difference. Also, ntex threads consume the same amount of CPU consistently (around 25% per core), while actix threads jump from 15 to ~40avg to 60. Actix seems to take more time to deallocate memory than ntex, probably because ntex uses pools to allocate temporaries rather than the system allocator.
 
 
-| Configuration                                                     | RPS       | Standard Deviation |
-|-------------------------------------------------------------------|-----------|--------------------|
-| Baseline                                                          | `43,904`  | `7,729.05`         |
-| Baseline, no logging                                              | `219,502` | `10,962.64`        |
-| Global counter, no logging                                        | `220,135` | `8,756.91`         |
-| Global counter, no logging, `KeepAlive::Os`                       | `231,202` | `5,237.95`         |
-| Global counter, no logging, `KeepAlive::Os`, `snmalloc`           | `230,914` | `6,937.38`         |
-| Ntex, no logging, `KeepAlive::Os`                                 | `224,109` | `3,415.54`         |
-| Ntex, no logging, `KeepAlive::Os`, no allocations                 | `226,791` | `1,854.91`         |
-| Ntex, no logging, `KeepAlive::Os`, no allocations, binary payload | `226,093` | `2,407.74`         |
+| Configuration                                                        | RPS       | Standard Deviation |
+|----------------------------------------------------------------------|-----------|--------------------|
+| Baseline, no logging                                                 | `219,502` | `10,962.64`        |
+| Global counter, no logging                                           | `220,135` | `8,756.91`         |
+| Global counter, no logging, `KeepAlive::Os`                          | `231,202` | `5,237.95`         |
+| Global counter, no logging, `KeepAlive::Os`, `snmalloc`              | `230,914` | `6,937.38`         |
+| Ntex, no logging, `KeepAlive::Os`                                    | `224,109` | `3,415.54`         |
+| Ntex, no logging, `KeepAlive::Os`, no allocations                    | `226,791` | `1,854.91`         |
+| Ntex, no logging, `KeepAlive::Os`, no allocations, binary payload    | `226,093` | `2,407.74`         |
+| Python, FastAPI+Uvloop+Coredis/Hiredis, no logging, Gunicorn+Uvicorn | `38,908`  | `201.45`           |
 
 
 ### Infrastructure Benchmarks (same datacenter)
