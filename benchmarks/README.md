@@ -41,59 +41,13 @@ Using Nginx reduces the performance by 70%, while logging to a file shaves 25% o
 
 
 ### Backend Benchmarks
-| Configuration                                         | RPS       | Standard Deviation |
-| ----------------------------------------------------- | --------- | ------------------ |
-| Localhost, Logging=uninitialized, No backend          | `232,045` | `2,939.84`         |
-| Localhost, Logging=uninitialized, File (mmap) backend | `232,196` | `4,867.31`         |
-
-
+Note that these results are volatile, so the measurement shouldn't be interpreted exactly. Overall the performance of the first three configuration is about the same.
+| Configuration                                                           | RPS       | Standard Deviation |
+| -----------------------------------------------------                   | --------- | ------------------ |
+| Localhost, Logging=uninitialized, No backend                            | `270,262` | `2,089.54`         |
+| Localhost, Logging=uninitialized, File backend                          | `272,643` | `1,536.49`         |
+| Localhost, Logging=uninitialized, Redis backend                         | `274,410` | `1,680.54`         |
+| Localhost, Logging=uninitialized, Redis backend, Instances=2, Clients=2 | `289,549` | `17,861.72`        |
 
 ## Preprocessing Code
-```py
-#! python -m pip install requests pandas
-import pandas as pd
-import requests
-
-urls = {
-    "baseline": "https://haste.zneix.eu/raw/ucuqyrohab.apache",
-    "no-logging": "https://haste.zneix.eu/raw/vobojasegy.apache",
-    "global,no-logging": "https://haste.zneix.eu/raw/zibexafuko.apache",
-    "global,no-logging,backlog-1024,keepalive-os": "https://haste.zneix.eu/raw/enaxusiguk.apache",
-    "global,no-logging,backlog-1024,keepalive-os,snmalloc": "https://haste.zneix.eu/raw/medibijyky.apache",
-    "ntex,no-logging,backlog-1024,keepalive-os": "https://haste.zneix.eu/raw/reniwanawy.apache",
-    "ntex,no-logging,backlog-1024,keepalive-os,no-allocations": "https://haste.zneix.eu/raw/hamosaceba.apache",
-    "ntex,no-logging,backlog-1024,keepalive-os,no-allocations,binary-payload": "https://haste.zneix.eu/raw/itamalihoh.apache",
-    "localhost": "https://haste.zneix.eu/raw/fycaperety.apache",
-    "domain,no-nginx": "https://haste.zneix.eu/raw/imucukajig.apache",
-    "domain,nginx": "https://haste.zneix.eu/raw/pygyzoryty.apache",
-    "domain,nginx,logging=info,stdout": "https://haste.zneix.eu/raw/qufomacysi.apache",
-    "domain,nginx,logging=error,stdout": "https://haste.zneix.eu/raw/pynivyqydu.apache",
-    "domain,nginx,logging=info,unix-pipe": "https://haste.zneix.eu/raw/ifawomujyg.apache",
-    "domain,nginx,logging=info,fs-buffered": "https://haste.zneix.eu/raw/utedofabev.apache",
-    "localhost,logging=uninitialized,no-backend": "https://haste.zneix.eu/raw/sabifijope.apache",
-    "localhost,logging=uninitialized,file-backend": "https://haste.zneix.eu/raw/faqysavywu.apache"
-}
-
-for url in urls:
-    urls[url] = requests.get(urls[url]).text.strip().split("\n")[1:]
-
-for url in urls:
-    readings = []
-
-    # skip the first `warmup` seconds
-    warmup = 3
-    for line in urls[url][warmup:]:
-        before, after = line.split("ms:")
-        time = before.rsplit(maxsplit=1)[-1].strip()
-        requests = after.split()[0].strip()
-
-        readings.append((int(time), int(requests)))
-
-    df = pd.DataFrame(readings, columns=("ms", "requests"))
-    df["rps"] = df["requests"] / df["ms"] * 1000
-
-    rps = df["rps"].mean()
-    stddev = df["rps"].std()
-    print(f"|{url}|`{int(rps):,}`|`{stddev:,.2f}`|")
-
-```
+See `stats.py`.

@@ -28,8 +28,6 @@ pub struct FileStorage {
   sync_frequency: Duration,
 }
 
-const MIN_DURATION: Duration = Duration::new(1, 0);
-
 fn parse_file_contents(file: &mut File) -> Result<u64> {
   use std::io::{Seek, SeekFrom};
   file.seek(SeekFrom::Start(0))?;
@@ -76,7 +74,7 @@ impl FileStorage {
       sync_frequency,
     } = self;
 
-    counter.set(parse_file_contents(&mut file)?);
+    counter.add(parse_file_contents(&mut file)?);
 
     std::thread::spawn(move || {
       let mut previous_count = u64::MAX;
