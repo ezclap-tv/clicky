@@ -2,6 +2,8 @@ use {crate::Count, actix_web::web, std::time::Duration};
 
 use redis::Commands;
 
+const ERRORS_TO_RECONNECT: usize = 3;
+
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
   #[error("{0}")]
@@ -15,7 +17,6 @@ pub enum Error {
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
-
 /// Memory mapped file storage
 pub struct RedisStorage {
   client: redis::Client,
@@ -60,6 +61,7 @@ impl RedisStorage {
         local_count: counter,
         previous_remote_count: count,
       };
+      let mut n_errors = 0;
       loop {
         let res: redis::RedisResult<u64> =
           redis::transaction(&mut conn, &[REDIS_KEY], |con, pipe| {
@@ -78,10 +80,29 @@ impl RedisStorage {
           Err(e) => {
             // Don't panic since it might've been a random network hiccup
             log::error!(
-              "Failed to persist the counter at {}: {}",
+              "Failed to persist the counter at {} (attempt {}): {}",
               tracker.local_count.get(),
+              n_errors,
               e
             );
+            n_errors += 1;
+
+            // Try to re-create the connection if we're failing repeatedly.
+            if n_errors % ERRORS_TO_RECONNECT == 0 {
+              match client.get_connection() {
+                Ok(new_conn) => {
+                  n_errors = 0;
+                  conn = new_conn;
+                }
+                Err(e) => {
+                  log::error!(
+                    "Failed to reconnect {} times: {}",
+                    n_errors / ERRORS_TO_RECONNECT,
+                    e
+                  );
+                }
+              }
+            }
           }
         }
 
